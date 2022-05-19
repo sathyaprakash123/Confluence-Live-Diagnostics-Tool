@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns="https://www.thymeleafe.org">
+<head>
+<meta charset="ISO-8859-1">
+<title>Confluence Performance Diagnostics</title>
+<link rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<link rel="stylesheet"
+    href="https://code.highcharts.com/css/highcharts.css" />
+<script
+    src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script
+    src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+</head>
+<body>
+    <div align="center">
+        <h2>Confluence Diagnostics</h2>
+    </div>
+    <figure class="highcharts-figure">
+        <div id="container-bar"></div>
+        <div id="pie-container" align="left"></div>
+        <div id ="container-line" </div>
+    </figure>
+    
+    <script type="text/javascript">
+        $(document).ready(
+                function() {
+                    $.ajax({
+                        url : "/get-data",
+                        success : function(result) {
+                            var yearDtls = [];
+                            var countDtls = [];
+                            console.log(result);
+                            Object.keys(result).forEach(
+                                    function(key) {
+                                        yearDtls.push(key);
+                                        countDtls.push(result[key]);
+                                    });
+                            drawChart(yearDtls, countDtls);
+                        }
+                    });
+                });
+        function drawChart(year, viewCounts) {
+            Highcharts.chart('container-bar', {
+                chart : {
+                    type : 'column',
+                    styledMode : true
+                },
+                title : {
+                    text : 'Performance Metrics'
+                },
+                xAxis : [ {
+                    title : {
+                        text : 'Error / Warnings / Failures'
+                    },
+                    categories : year
+                } ],
+                yAxis : [ {
+                    className : 'highcharts-color-0',
+                    title : {
+                        text : 'Error / Warning Occurence Count'
+                    }
+                } ],
+                series : [ {
+                    data : viewCounts
+                } ]
+            });
+            
+            
+        }
+        
+        $.ajax({
+            url: 'piechart',
+            success : function(result){
+            var series =[];
+            var data = [];
+            for(var i= 0; i < result.length; i++)
+            {
+            var object = {};
+            object.name = result[i].name;
+            object.y = result[i].yaxis;
+            data.push(object);
+            }
+            
+            var seriesObject =
+            {
+            name : 'Confluence',
+            colorByPoint : true,
+            data : data
+            }
+            
+            series.push(seriesObject);
+            drawPieChart(series);
+            drawLineChart();
+            }
+            })
+            
+        
+        function drawPieChart(series) {
+        Highcharts.chart('pie-container', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Error and Warning Percentage'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: series
+});
+
+}
+
+function drawLineChart(series){
+Highcharts.chart('container-line', {
+
+  title: {
+    text: 'Confluence Memory Usage'
+  },
+
+  subtitle: {
+    text: 'Confluence Diagnostics Tool'
+  },
+
+  yAxis: {
+    title: {
+      text: 'Log Count'
+    }
+  },
+
+  xAxis: {
+    accessibility: {
+      rangeDescription: 'Usage Range'
+    }
+  },
+
+  legend: {
+    layout: 'vertical',
+    align: 'right',
+    verticalAlign: 'middle'
+  },
+
+  plotOptions: {
+    series: {
+      label: {
+        connectorAllowed: false
+      },
+      pointStart: 8
+    }
+  },
+
+  series: [{
+    name: 'JVM Memory',
+    data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+  }, {
+    name: 'Content Creation',
+    data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
+  }, {
+    name: 'APIs',
+    data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
+  }, {
+    name: 'Space export',
+    data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
+  }, {
+    name: 'Other',
+    data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
+  }],
+
+  responsive: {
+    rules: [{
+      condition: {
+        maxWidth: 500
+      },
+      chartOptions: {
+        legend: {
+          layout: 'horizontal',
+          align: 'center',
+          verticalAlign: 'bottom'
+        }
+      }
+    }]
+  }
+
+});
+}
+
+
+
+
+    </script>
+</body>
+</html>
